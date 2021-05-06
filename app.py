@@ -8,12 +8,15 @@ import json
 app = Flask(__name__)
 
 # Configure CS50 Library to use SQLite database
-db = SQL("./database.db")
+db = SQL("sqlite:///database.db")
 
-@app.route("/home")
+@app.route("/")
 def home():
     users = db.execute("SELECT * FROM users")
     for row in users:
         row.pop("id")
 
-    return json.dumps(users)
+    return jsonify(dumps(users))
+
+# NOTE: we should make a package.json file
+# current dependencies: python, flask, cs50
