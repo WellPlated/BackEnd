@@ -3,32 +3,23 @@ from flask import request, jsonify
 import sqlite3
 import hashlib
 from helpers import login_required
+from cs50 import SQL
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
 
-DATABASE = './database.db'
-CONN = sqlite3.connect(DATABASE)
-CURSOR = CONN.cursor()
-
-
-def dict_factory(cursor, row):
-    d = {}
-    for idx, col in enumerate(cursor.description):
-        d[col[0]] = row[idx]
-        
-    return d
-
-CURSOR.row_factory = dict_factory
+# Configure CS50 Library to use SQLite database
+db = SQL("sqlite:///database.db")
 
 @app.route('/', methods=['GET'])
-@login_required
 def home():
-    return '''<h1>WellPlated API</h1>
-<p>API for the backend of the WellPlated App</p>'''
+    return "Well Plated Backend!"
 
+@app.route('/recipes/all', methods=['GET'])
+def api_all_orders():
+    return jsonify(db.execute("SELECT * FROM recipes"))
 
-
+'''
 @app.route('/signup', methods=['POST'])
 def api_signup():
     if(request.method=='POST'):
@@ -108,7 +99,7 @@ def page_not_found(e):
     return "<h1>404</h1><p>The location could not be found </p>", 404
 
 
-"""
+
 @app.route('/api/v1/locations/restaurants/all', methods=['GET'])
 def api_all_restaurants():
     conn = sqlite3.connect('datav2.db')
@@ -247,8 +238,9 @@ def api_id_specific():
     # IDs are unique, but other fields might return many results
   
             
-    """
+
 
 
 app.run()
 
+'''
