@@ -3,12 +3,12 @@ from flask import request, jsonify
 import sqlite3
 import hashlib
 from helpers import login_required
+from flask_bcrypt import generate_password_hash, check_password_hash
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
 
-DATABASE = './database.db'
-CONN = sqlite3.connect(DATABASE)
+DATABASE = './database.db'CONN = sqlite3.connect(DATABASE)
 CURSOR = CONN.cursor()
 
 
@@ -43,13 +43,32 @@ def api_signup():
 @app.route('/login', methods=['GET', 'POST'])
 def api_login():
     if request.method == 'POST':
-      session['username'] = request.form['username']
-      return redirect(url_for('index'))
-   
-    return jsonify(CURSOR.execute("SELECT * FROM Customers").fetchall())
-    return jsonify(data)
+      data = request.get_json()
+      print(data)
+      auth_user = await authenticate_user(data['username'], data['password'])
+      if auth_user:
+            token = await tokenize(auth_user)
+            return {"access_token": token, "token_type": "bearer"}
 
 
+def tokenize(user_data: dict) -> str:
+    return jwt.encode(
+        {
+            'user_id': user_data['id'],
+            'email': user_data['email'],
+            'hashed_password': user_data['hashed_password'],
+            'exp': datetime.utcnow() + timedelta(minutes=30)
+        },
+        SECRET_KEY,
+        algorithm="HS256")
+
+def authenticate_user(username: str, hashed_password: str) -> dict:
+    existing_user = CURSOR.execute("SELECT * FROM users WHERE email="+username).fetchall()
+    if existing_user and check_password_hash(existing_user['password'],
+                                             hashed_password):
+        return user_helper(existing_user)
+
+"""
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Log user in"""
@@ -85,7 +104,7 @@ def login():
     # User reached route via GET (as by clicking a link or via redirect)
     else:
         return redirect("/login")  # old version render_template("login.html")
-
+"""
 @app.route("/logout")
 def logout():
     """Log user out"""
