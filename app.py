@@ -3,13 +3,25 @@ from flask import request, jsonify
 import sqlite3
 import hashlib
 from helpers import login_required
+from flask_bcrypt import generate_password_hash, check_password_hash
 from cs50 import SQL
-
+import jwt
+from datetime import datetime, timedelta
+SECRET_KEY="8947357943789907843098489284HFVH94-7FG-GVVG-"
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
 
 # Configure CS50 Library to use SQLite database
 db = SQL("sqlite:///database.db")
+
+def user_helper(user) -> dict:
+    print(user)
+    return {
+        "id": str(user[0]["id"]),
+        "username": str(user[0]["username"]),
+        "password": str(user[0]["password"]),
+        "email":str(user[0]["email"])
+    }
 
 @app.route('/', methods=['GET'])
 def home():
@@ -19,14 +31,15 @@ def home():
 def api_all_orders():
     return jsonify(db.execute("SELECT * FROM recipes"))
 
-'''
+
 @app.route('/signup', methods=['POST'])
 def api_signup():
     if(request.method=='POST'):
         data = request.get_json()
+        print("aaa")
         print(data)
-        CURSOR.execute("INSERT INTO users(username,password,email) VALUES('"+str(data['username'])+"','"+str(data['password'])+"','"+str(data['email'])"')")
-        CONN.commit()
+        db.execute("INSERT INTO users(username,password,email) VALUES('"+str(data['username'])+"','"+str(generate_password_hash(str(data['password'])).decode('utf8'))+"','"+str(data['email'])+"')")
+    
         return jsonify(data)
 
 
@@ -34,16 +47,44 @@ def api_signup():
 @app.route('/login', methods=['GET', 'POST'])
 def api_login():
     if request.method == 'POST':
-      session['username'] = request.form['username']
-      return redirect(url_for('index'))
-   
-    return jsonify(CURSOR.execute("SELECT * FROM Customers").fetchall())
-    return jsonify(data)
+      data = request.json
+      print(request)
+      auth_user = authenticate_user(data['username'], str(data['password']))
+      if auth_user:
+            token = tokenize(auth_user)
+            print(token)
+            return {"status": 200, "access_token": str(token), "token_type": "bearer"}
+      else:
+          return {"status": 403, "message": "failed to login"}
 
 
+def tokenize(user_data: dict) -> str:
+    return jwt.encode(
+        {
+            'user_id': user_data['id'],
+            'email': user_data['email'],
+            'password': user_data['password'],
+            'exp': datetime.utcnow() + timedelta(minutes=30)
+        },
+        SECRET_KEY,
+        algorithm="HS256")
+
+def authenticate_user(username: str, password: str) -> dict:
+    existing_user = db.execute("SELECT * FROM users WHERE username="+"'"+username+"'")
+    print(existing_user)
+    try:
+        if existing_user and check_password_hash(existing_user[0]['password'],
+                                                password):
+            return user_helper(existing_user)
+        else:
+            return None
+    except:
+        return None
+
+"""
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    """Log user in"""
+    
 
     # Forget any user_id
     session.clear()
@@ -79,7 +120,7 @@ def login():
 
 @app.route("/logout")
 def logout():
-    """Log user out"""
+    
 
     # Forget any user_id
     session.clear()  #session.pop('username', None)
@@ -237,10 +278,9 @@ def api_id_specific():
     # Loop through the data and match results that fit the requested ID.
     # IDs are unique, but other fields might return many results
   
-            
+"""    
 
 
 
 app.run()
 
-'''
