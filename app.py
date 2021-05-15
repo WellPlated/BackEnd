@@ -7,9 +7,14 @@ from flask_bcrypt import generate_password_hash, check_password_hash
 from cs50 import SQL
 import jwt
 from datetime import datetime, timedelta
+
 SECRET_KEY="8947357943789907843098489284HFVH94-7FG-GVVG-"
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
+
+# Save user who is logged in
+
+token = None
 
 # Configure CS50 Library to use SQLite database
 db = SQL("sqlite:///database.db")
@@ -36,13 +41,10 @@ def api_all_orders():
 def api_signup():
     if(request.method=='POST'):
         data = request.get_json()
-        print("aaa")
         print(data)
         db.execute("INSERT INTO users(username,password,email) VALUES('"+str(data['username'])+"','"+str(generate_password_hash(str(data['password'])).decode('utf8'))+"','"+str(data['email'])+"')")
     
         return jsonify(data)
-
-
 
 @app.route('/login', methods=['GET', 'POST'])
 def api_login():
@@ -55,7 +57,16 @@ def api_login():
             print(token)
             return {"status": 200, "access_token": str(token), "token_type": "bearer"}
       else:
-          return {"status": 403, "message": "failed to login"}
+          return {"status": 403, "message": "Wrong credentials!"}
+
+
+@app.route('/recipes/user', methods=['GET'])
+def user_recipes():
+    try:
+        user_id = token[0]["id"]
+        return {"status": 200, "data": jsonify(db.execute("SELECT * FROM recipes WHERE user_id=:id", id=user_id))}
+    except:
+        return {"status": 403, "message": "no user logged in"}
 
 
 def tokenize(user_data: dict) -> str:
