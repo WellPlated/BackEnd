@@ -34,7 +34,15 @@ def home():
 
 @app.route('/recipes/all', methods=['GET'])
 def api_all_orders():
-    return jsonify(db.execute("SELECT * FROM recipes"))
+    recipes = db.execute("SELECT * FROM recipes")
+    for recipe in recipes:
+        # find_username = db.execute("SELECT username FROM users WHERE id=:id", id=recipe["user_id"])
+        recipe["user"] = db.execute("SELECT username FROM users WHERE id=:id", id=recipe["user_id"])[0]["username"]
+        del(recipe["user_id"])
+        del(recipe["id"])
+    
+    return jsonify(recipes)
+
 
 
 @app.route('/signup', methods=['POST'])
