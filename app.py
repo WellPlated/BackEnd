@@ -63,18 +63,23 @@ def api_login():
       if auth_user:
             token = tokenize(auth_user)
             print(token)
-            return {"status": 200, "access_token": str(token), "token_type": "bearer"}
+            return {"status": 200, "access_token": str(token)[2:-1], "token_type": "bearer"}
       else:
           return {"status": 403, "message": "Wrong credentials!"}
 
 
-@app.route('/recipes/user', methods=['GET'])
+
+@app.route('/recipes/user', methods=['POST'])
 def user_recipes():
+    data=request.json
     try:
-        user_id = token[0]["id"]
-        return {"status": 200, "data": jsonify(db.execute("SELECT * FROM recipes WHERE user_id=:id", id=user_id))}
+        token=data['token']
+        decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        return jsonify(db.execute("SELECT * FROM recipes WHERE user_id=:id", id=decoded['user_id']))
+    
     except:
         return {"status": 403, "message": "no user logged in"}
+    
 
 
 def tokenize(user_data: dict) -> str:
