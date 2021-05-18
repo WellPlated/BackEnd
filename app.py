@@ -2,6 +2,7 @@ import flask
 from flask import request, jsonify
 import sqlite3
 import hashlib
+from flask_cors import CORS
 from helpers import login_required
 from flask_bcrypt import generate_password_hash, check_password_hash
 from cs50 import SQL
@@ -11,6 +12,7 @@ from datetime import datetime, timedelta
 SECRET_KEY="8947357943789907843098489284HFVH94-7FG-GVVG-"
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
+cors = CORS(app)
 
 # Save user who is logged in
 
@@ -92,6 +94,15 @@ def user_recipes():
     except:
         return {"status": 403, "message": "no user logged in"}
     
+@app.route('/upload', methods=['POST'])
+def api_upload():
+    if(request.method=='POST'):
+        data = request.get_json()
+        print(data)
+        userID = data['user_id']
+        db.execute("INSERT INTO recipes(user_id,title,date, description, ingredients, recipe, tags) VALUES('userID','"+str(data['title'])+"','"+str(data['date'])+"','"+str(data['description'])+"','"+str(data['ingredients'])+"', '"+str(data['recipe'])+"','"+str(data['tags'])+"')")
+    
+        return jsonify(data)
 
 
 def tokenize(user_data: dict) -> str:
