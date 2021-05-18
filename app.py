@@ -2,6 +2,7 @@ import flask
 from flask import request, jsonify
 import sqlite3
 import hashlib
+from flask_cors import CORS
 from helpers import login_required
 from flask_bcrypt import generate_password_hash, check_password_hash
 from cs50 import SQL
@@ -11,6 +12,7 @@ from datetime import datetime, timedelta
 SECRET_KEY="8947357943789907843098489284HFVH94-7FG-GVVG-"
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
+cors = CORS(app)
 
 # Save user who is logged in
 
