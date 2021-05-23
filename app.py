@@ -123,7 +123,21 @@ def user_recipes():
     except:
         return {"status": 403, "message": "no user logged in"}
     
+@app.route('/recipes/addtag', methods=['POST'])
+def api_addtag():
+    if request.method == 'POST':
+      data = request.json
+      db.execute("INSERT INTO tags(recipe_id,tag) VALUES("+str(data['recipe_id'])+","+"'"+str(data['tag'])+"'"+")")
+      return {"status": 200, "message": "tag inserted"}
 
+
+@app.route('/recipes/gettags', methods=['GET'])
+def api_gettags():
+    if request.method == 'GET':
+      data =  request.args
+      print(request)
+      return jsonify(db.execute("SELECT tag FROM tags WHERE recipe_id="+str(data.get("recipe_id"))))
+      
 
 def tokenize(user_data: dict) -> str:
     return jwt.encode(
