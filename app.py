@@ -50,11 +50,40 @@ def api_all_orders():
 @app.route('/signup', methods=['POST'])
 def api_signup():
     if(request.method=='POST'):
-        data = request.get_json()
+        data = request.json
+        
         print(data)
+
+        message = 'success'
+
+        # make sure no fields are blank
+        if data['username'] == '':
+            message = "No username given. Try again"
+        elif data['email'] == '':
+            message = "No email given. Try again"
+        elif data['password'] == '':
+            message = "No password given. Try again"
+
+        if message != 'success':
+            print(message)
+            return {"status": 403, "message" : message}
+
+        # make sure username is not a duplicate
+
+        duplicate = db.execute("SELECT * FROM users WHERE username = :username", username=data['username'])
+
+        if duplicate != []:
+            message = "Username already exists. Pick another one."
+
+        if message != 'success':
+            print(message)
+            return {"status": 403, "message" : message}
+
+        # hash the password before storing it
+
         db.execute("INSERT INTO users(username,password,email) VALUES('"+str(data['username'])+"','"+str(generate_password_hash(str(data['password'])).decode('utf8'))+"','"+str(data['email'])+"')")
-    
-        return jsonify(data)
+ 
+        return { "status" : 200 }
 
 @app.route('/login', methods=['GET', 'POST'])
 def api_login():
