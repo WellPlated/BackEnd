@@ -136,7 +136,13 @@ def api_gettags():
     if request.method == 'GET':
       data =  request.args
       print(request)
-      return jsonify(db.execute("SELECT tag FROM tags WHERE recipe_id="+str(data.get("recipe_id"))))
+      temp=list(db.execute("SELECT tag FROM tags WHERE recipe_id="+str(data.get("recipe_id"))))
+      tags=[]
+      for i in range(0,len(temp)):
+          tags.append(temp[i]["tag"])
+      return_dict={"tags":tags}
+      return jsonify(return_dict)
+
       
 
 def tokenize(user_data: dict) -> str:
