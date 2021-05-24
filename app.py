@@ -94,7 +94,7 @@ def api_login():
       if auth_user:
             token = tokenize(auth_user)
             print(token)
-            return {"status": 200, "access_token": str(token), "token_type": "bearer"}
+            return {"status": 200, "access_token": str(token)[2:-1], "token_type": "bearer"}
       else:
           return {"status": 403, "message": "Wrong credentials!"}
 
