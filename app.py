@@ -123,6 +123,21 @@ def user_recipes():
     except:
         return {"status": 403, "message": "no user logged in"}
     
+@app.route('/upload', methods=['POST'])
+def api_upload():
+    if(request.method=='POST'):
+        data = request.get_json()
+        
+        #abc = data['user_id']
+        token=data['user_id']
+        decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        userID = decoded['user_id']
+        db.execute("INSERT INTO recipes(user_id, title,date, description, ingredients, recipe, tags) \
+            VALUES("+str(userID)+", '"+str(data['title'])+"','"+str(data['date'])+"','"+str(data['description'])+"','"+str(data['ingredients'])+"',\
+                  '"+str(data['recipe'])+"','"+str(data['tags'])+"')")
+        print(data)
+        return jsonify(data)
+
 @app.route('/recipes/addtag', methods=['POST'])
 def api_addtag():
     if request.method == 'POST':
