@@ -50,11 +50,40 @@ def api_all_orders():
 @app.route('/signup', methods=['POST'])
 def api_signup():
     if(request.method=='POST'):
-        data = request.get_json()
+        data = request.json
+        
         print(data)
+
+        message = 'success'
+
+        # make sure no fields are blank
+        if data['username'] == '':
+            message = "No username given. Try again"
+        elif data['email'] == '':
+            message = "No email given. Try again"
+        elif data['password'] == '':
+            message = "No password given. Try again"
+
+        if message != 'success':
+            print(message)
+            return {"status": 403, "message" : message}
+
+        # make sure username is not a duplicate
+
+        duplicate = db.execute("SELECT * FROM users WHERE username = :username", username=data['username'])
+
+        if duplicate != []:
+            message = "Username already exists. Pick another one."
+
+        if message != 'success':
+            print(message)
+            return {"status": 403, "message" : message}
+
+        # hash the password before storing it
+
         db.execute("INSERT INTO users(username,password,email) VALUES('"+str(data['username'])+"','"+str(generate_password_hash(str(data['password'])).decode('utf8'))+"','"+str(data['email'])+"')")
-    
-        return jsonify(data)
+ 
+        return { "status" : 200 }
 
 @app.route('/login', methods=['GET', 'POST'])
 def api_login():
@@ -65,7 +94,7 @@ def api_login():
       if auth_user:
             token = tokenize(auth_user)
             print(token)
-            return {"status": 200, "access_token": str(token), "token_type": "bearer"}
+            return {"status": 200, "access_token": str(token)[2:-1], "token_type": "bearer"}
       else:
           return {"status": 403, "message": "Wrong credentials!"}
 
@@ -94,6 +123,7 @@ def user_recipes():
     except:
         return {"status": 403, "message": "no user logged in"}
     
+<<<<<<< HEAD
 @app.route('/upload', methods=['POST'])
 def api_upload():
     if(request.method=='POST'):
@@ -105,7 +135,29 @@ def api_upload():
                   '"+str(data['recipe'])+"','"+str(data['tags'])+"')")
         print(data)
         return jsonify(data)
+=======
+@app.route('/recipes/addtag', methods=['POST'])
+def api_addtag():
+    if request.method == 'POST':
+      data = request.json
+      db.execute("INSERT INTO tags(recipe_id,tag) VALUES("+str(data['recipe_id'])+","+"'"+str(data['tag'])+"'"+")")
+      return {"status": 200, "message": "tag inserted"}
 
+>>>>>>> tanaya-setup
+
+@app.route('/recipes/gettags', methods=['GET'])
+def api_gettags():
+    if request.method == 'GET':
+      data =  request.args
+      print(request)
+      temp=list(db.execute("SELECT tag FROM tags WHERE recipe_id="+str(data.get("recipe_id"))))
+      tags=[]
+      for i in range(0,len(temp)):
+          tags.append(temp[i]["tag"])
+      return_dict={"status":200,"tags":tags}
+      return jsonify(return_dict)
+
+      
 
 def tokenize(user_data: dict) -> str:
     return jwt.encode(
