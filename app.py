@@ -140,7 +140,7 @@ def api_gettags():
       tags=[]
       for i in range(0,len(temp)):
           tags.append(temp[i]["tag"])
-      return_dict={"tags":tags}
+      return_dict={"status":200,"tags":tags}
       return jsonify(return_dict)
 
       
