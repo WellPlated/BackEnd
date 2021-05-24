@@ -101,7 +101,7 @@ def api_upload():
         
         abc = data['user_id']
         db.execute("INSERT INTO recipes(user_id, title,date, description, ingredients, recipe, tags) \
-            VALUES("+str(cccc)+", '"+str(data['title'])+"','"+str(data['date'])+"','"+str(data['description'])+"','"+str(data['ingredients'])+"',\
+            VALUES("+str(data['user-id'])+", '"+str(data['title'])+"','"+str(data['date'])+"','"+str(data['description'])+"','"+str(data['ingredients'])+"',\
                   '"+str(data['recipe'])+"','"+str(data['tags'])+"')")
         print(data)
         return jsonify(data)
