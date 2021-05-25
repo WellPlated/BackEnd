@@ -158,7 +158,21 @@ def api_gettags():
       return_dict={"status":200,"tags":tags}
       return jsonify(return_dict)
 
-      
+ @app.route('/recipes/filter', methods=['POST'])
+def api_getfilter():
+    if request.method == 'POST':
+        data =  request.json
+        tempArray=[]
+        for i in range(0,len(data['tags'])):
+            temp=db.execute("SELECT recipe_id FROM tags WHERE tag='"+str(data['tags'][i])+"'")
+            for j in temp:
+                if(j['recipe_id'] not in tempArray):
+                    tempArray.append(j['recipe_id'])
+        return_list=[]
+        for k in range(0,len(tempArray)):
+            return_list.append(db.execute("SELECT * FROM recipes WHERE id="+str(tempArray[k])+"")[0])
+        
+    return jsonify(return_list)
 
 def tokenize(user_data: dict) -> str:
     return jwt.encode(
