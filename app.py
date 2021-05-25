@@ -162,16 +162,27 @@ def api_gettags():
 def api_getfilter():
     if request.method == 'POST':
         data =  request.json
+        print("printing data",data)
         tempArray=[]
+        if data is None or len(data['tags']) == 0:
+            recipes = db.execute("SELECT * FROM recipes")
+            for recipe in recipes:
+                # find_username = db.execute("SELECT username FROM users WHERE id=:id", id=recipe["user_id"])
+                recipe["user"] = db.execute("SELECT username FROM users WHERE id=:id", id=recipe["user_id"])[0]["username"]
+                del(recipe["user_id"])
+                del(recipe["id"])
+                # recipes.append({"status":200})
+            return jsonify(recipes)
         for i in range(0,len(data['tags'])):
-            temp=db.execute("SELECT recipe_id FROM tags WHERE tag='"+str(data['tags'][i])+"'")
+            temp=db.execute("SELECT recipe_id FROM tags WHERE tag='"+str(data['tags'][i]).lower()+"'")
             for j in temp:
                 if(j['recipe_id'] not in tempArray):
                     tempArray.append(j['recipe_id'])
         return_list=[]
         for k in range(0,len(tempArray)):
             return_list.append(db.execute("SELECT * FROM recipes WHERE id="+str(tempArray[k])+"")[0])
-        
+    # return_list.append({"status",200})
+    print(return_list)
     return jsonify(return_list)
 
 def tokenize(user_data: dict) -> str:
