@@ -158,7 +158,7 @@ def api_gettags():
       return_dict={"status":200,"tags":tags}
       return jsonify(return_dict)
 
- @app.route('/recipes/filter', methods=['POST'])
+@app.route('/recipes/filter', methods=['POST'])
 def api_getfilter():
     if request.method == 'POST':
         data =  request.json
