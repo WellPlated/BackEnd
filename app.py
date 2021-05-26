@@ -93,8 +93,9 @@ def api_login():
       auth_user = authenticate_user(data['username'], str(data['password']))
       if auth_user:
             token = tokenize(auth_user)
-            print(type(token))
-            return {"status": 200, "access_token": str(token)[2:-1], "token_type": "bearer"}
+            if type(token) is bytes:
+                token=token[2:-1]
+            return {"status": 200, "access_token": str(token), "token_type": "bearer"}
       else:
           return {"status": 403, "message": "Wrong credentials!"}
 
