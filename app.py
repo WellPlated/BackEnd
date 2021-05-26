@@ -128,10 +128,18 @@ def api_upload():
     if(request.method=='POST'):
         data = request.get_json()
         
-        #abc = data['user_id']
         token=data['user_id']
+        token = "ey" + token
+        print("printing token")
+        print(token)
+
+        #options = {'verify_aud': False, 'require_sub': True}
         decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        print(decoded)
+        print("im here")
         userID = decoded['user_id']
+        print(userID)
+        
         db.execute("INSERT INTO recipes(user_id, title,date, description, ingredients, recipe, tags) \
             VALUES("+str(userID)+", '"+str(data['title'])+"','"+str(data['date'])+"','"+str(data['description'])+"','"+str(data['ingredients'])+"',\
                   '"+str(data['recipe'])+"','"+str(data['tags'])+"')")
