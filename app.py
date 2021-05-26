@@ -93,7 +93,7 @@ def api_login():
       auth_user = authenticate_user(data['username'], str(data['password']))
       if auth_user:
             token = tokenize(auth_user)
-            print(token)
+            print(type(token))
             return {"status": 200, "access_token": str(token)[2:-1], "token_type": "bearer"}
       else:
           return {"status": 403, "message": "Wrong credentials!"}
@@ -129,7 +129,7 @@ def api_upload():
         data = request.get_json()
         
         token=data['user_id']
-        token = "ey" + token
+        #token = "ey" + token
         print("printing token")
         print(token)
 
