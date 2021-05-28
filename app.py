@@ -3,7 +3,6 @@ from flask import request, jsonify
 import sqlite3
 import hashlib
 from flask_cors import CORS
-from helpers import login_required
 from flask_bcrypt import generate_password_hash, check_password_hash
 from cs50 import SQL
 import jwt
