@@ -218,6 +218,16 @@ def api_getfilter():
     print(return_list)
     return jsonify(return_list)
 
+@app.route('/delete', methods=['POST'])
+def delete_recipe():
+    if request.method == 'POST':
+        data = request.json
+        print(data)
+        recipe_id = data['id']
+
+        db.execute("DELETE FROM recipes WHERE id=" + str(recipe_id))
+        return {'status' : 'test'}
+
 def tokenize(user_data: dict) -> str:
     return jwt.encode(
         {
