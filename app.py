@@ -127,26 +127,49 @@ def user_recipes():
 @app.route('/upload', methods=['POST'])
 def api_upload():
     if(request.method=='POST'):
+        
         data = request.json
-        
         token=data['user_id']
-        #token = "ey" + token
-        print("printing token")
-        print(token)
-
-        #options = {'verify_aud': False, 'require_sub': True}
         decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        print(decoded)
-        #print("im here")
         userID = decoded['user_id']
-        #print(userID)
-        print(data)
         
-        db.execute("INSERT INTO recipes(user_id, title ,date, description, ingredients, recipe, tags) \
+        message = 'success'
+        # make sure no fields are blank
+        if data['title'] == '':
+            message = "No title given. Try again"
+        elif data['description'] == '':
+            message = "No description given. Try again"
+        elif data['ingredients'] == '':
+            message = "No ingredients given. Try again"
+        elif data['recipe'] == '':
+            message = "No steps given. Try again"
+
+
+        check = db.execute("SELECT * from recipes WHERE user_id=:user_id and description=:descript and date=:date and title=:title", user_id=userID, descript=data['description'], date=data['date'], title= data['title'])
+
+        if check != []:
+            message = "Recipe already exists!"
+
+        if message != 'success':
+            print(message)
+            return {"status": 403, "message" : message}
+
+        
+        db.execute("INSERT INTO recipes(user_id, title ,date, description, ingredients, recipe, cuisine) \
             VALUES("+str(userID)+", '"+str(data['title'])+"','"+str(data['date'])+"','"+str(data['description'])+"','"+str(data['ingredients'])+"',\
-                  '"+str(data['recipe'])+"','"+str("Adsfdsfsd")+"')")
-        print(data)
-        return jsonify(data)
+                  '"+str(data['recipe'])+"', '"+str(data['cuisine'])+"')")
+        
+        
+        recipeID = db.execute("SELECT id from recipes WHERE user_id=:user_id and description=:descript and date=:date and title=:title", user_id=userID, descript=data['description'], date=data['date'], title= data['title'])
+        # print("testing stuff here:")
+        # print(recipeID)
+        # print(len(recipeID))
+        # print(recipeID[0]['id'])
+        # print(data['tags'])
+        for tag in data['tags']:
+            db.execute("INSERT INTO tags(recipe_id,tag) VALUES("+str(recipeID[0]['id'])+","+"'"+str(tag)+"'"+")")
+
+        return {"status": 200 }
 
 @app.route('/recipes/addtag', methods=['POST'])
 def api_addtag():
