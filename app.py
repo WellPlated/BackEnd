@@ -93,8 +93,9 @@ def api_login():
       auth_user = authenticate_user(data['username'], str(data['password']))
       if auth_user:
             token = tokenize(auth_user)
-            print(token)
-            return {"status": 200, "access_token": str(token)[2:-1], "token_type": "bearer"}
+            if type(token) is bytes:
+                token=token[2:-1]
+            return {"status": 200, "access_token": str(token), "token_type": "bearer"}
       else:
           return {"status": 403, "message": "Wrong credentials!"}
 
@@ -126,17 +127,49 @@ def user_recipes():
 @app.route('/upload', methods=['POST'])
 def api_upload():
     if(request.method=='POST'):
-        data = request.get_json()
         
-        #abc = data['user_id']
+        data = request.json
         token=data['user_id']
         decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         userID = decoded['user_id']
-        db.execute("INSERT INTO recipes(user_id, title,date, description, ingredients, recipe, tags) \
+        
+        message = 'success'
+        # make sure no fields are blank
+        if data['title'] == '':
+            message = "No title given. Try again"
+        elif data['description'] == '':
+            message = "No description given. Try again"
+        elif data['ingredients'] == '':
+            message = "No ingredients given. Try again"
+        elif data['recipe'] == '':
+            message = "No steps given. Try again"
+
+
+        check = db.execute("SELECT * from recipes WHERE user_id=:user_id and description=:descript and date=:date and title=:title", user_id=userID, descript=data['description'], date=data['date'], title= data['title'])
+
+        if check != []:
+            message = "Recipe already exists!"
+
+        if message != 'success':
+            print(message)
+            return {"status": 403, "message" : message}
+
+        
+        db.execute("INSERT INTO recipes(user_id, title ,date, description, ingredients, recipe, cuisine) \
             VALUES("+str(userID)+", '"+str(data['title'])+"','"+str(data['date'])+"','"+str(data['description'])+"','"+str(data['ingredients'])+"',\
-                  '"+str(data['recipe'])+"','"+str(data['tags'])+"')")
-        print(data)
-        return jsonify(data)
+                  '"+str(data['recipe'])+"', '"+str(data['cuisine'])+"')")
+        
+        
+        recipeID = db.execute("SELECT id from recipes WHERE user_id=:user_id and description=:descript and date=:date and title=:title", user_id=userID, descript=data['description'], date=data['date'], title= data['title'])
+        # print("testing stuff here:")
+        # print(recipeID)
+        # print(len(recipeID))
+        # print(recipeID[0]['id'])
+        # print(data['tags'])
+        for tag in data['tags']:
+            db.execute("INSERT INTO tags(recipe_id,tag) VALUES("+str(recipeID[0]['id'])+","+"'"+str(tag)+"'"+")")
+
+        return {"status": 200 }
 
 @app.route('/recipes/addtag', methods=['POST'])
 def api_addtag():
@@ -158,7 +191,42 @@ def api_gettags():
       return_dict={"status":200,"tags":tags}
       return jsonify(return_dict)
 
-      
+@app.route('/recipes/filter', methods=['POST'])
+def api_getfilter():
+    if request.method == 'POST':
+        data =  request.json
+        print("printing data",data)
+        tempArray=[]
+        if data is None or len(data['tags']) == 0:
+            recipes = db.execute("SELECT * FROM recipes")
+            for recipe in recipes:
+                # find_username = db.execute("SELECT username FROM users WHERE id=:id", id=recipe["user_id"])
+                recipe["user"] = db.execute("SELECT username FROM users WHERE id=:id", id=recipe["user_id"])[0]["username"]
+                del(recipe["user_id"])
+                del(recipe["id"])
+                # recipes.append({"status":200})
+            return jsonify(recipes)
+        for i in range(0,len(data['tags'])):
+            temp=db.execute("SELECT recipe_id FROM tags WHERE tag='"+str(data['tags'][i]).lower()+"'")
+            for j in temp:
+                if(j['recipe_id'] not in tempArray):
+                    tempArray.append(j['recipe_id'])
+        return_list=[]
+        for k in range(0,len(tempArray)):
+            return_list.append(db.execute("SELECT * FROM recipes WHERE id="+str(tempArray[k])+"")[0])
+    # return_list.append({"status",200})
+    print(return_list)
+    return jsonify(return_list)
+
+@app.route('/delete', methods=['POST'])
+def delete_recipe():
+    if request.method == 'POST':
+        data = request.json
+        print(data)
+        recipe_id = data['id']
+
+        db.execute("DELETE FROM recipes WHERE id=" + str(recipe_id))
+        return {'status' : 'test'}
 
 def tokenize(user_data: dict) -> str:
     return jwt.encode(
