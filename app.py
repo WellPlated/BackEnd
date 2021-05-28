@@ -228,6 +228,17 @@ def delete_recipe():
         db.execute("DELETE FROM recipes WHERE id=" + str(recipe_id))
         return {'status' : 'test'}
 
+@app.route('/comment', methods=['POST']) # info coming in: user_id, recipe_id, comment
+def comment_on_recipe():
+    if request.method == 'POST':
+        data = request.json
+        recipe_id=data["recipe_id"]
+        user_id=data["user_id"]
+        comment=data["comment"]
+        print(data)
+        db.execute("INSERT INTO comments(user_id, recipe_id, comment) VALUES(:recipe_id, :user_id, :comment)", recipe_id=recipe_id, user_id=user_id, comment=comment)
+        return {'status' : 'success'}
+
 def tokenize(user_data: dict) -> str:
     return jwt.encode(
         {
