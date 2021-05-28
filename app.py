@@ -127,7 +127,7 @@ def user_recipes():
 @app.route('/upload', methods=['POST'])
 def api_upload():
     if(request.method=='POST'):
-        data = request.get_json()
+        data = request.json
         
         token=data['user_id']
         #token = "ey" + token
@@ -137,13 +137,14 @@ def api_upload():
         #options = {'verify_aud': False, 'require_sub': True}
         decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         print(decoded)
-        print("im here")
+        #print("im here")
         userID = decoded['user_id']
-        print(userID)
+        #print(userID)
+        print(data)
         
-        db.execute("INSERT INTO recipes(user_id, title,date, description, ingredients, recipe, tags) \
+        db.execute("INSERT INTO recipes(user_id, title ,date, description, ingredients, recipe, tags) \
             VALUES("+str(userID)+", '"+str(data['title'])+"','"+str(data['date'])+"','"+str(data['description'])+"','"+str(data['ingredients'])+"',\
-                  '"+str(data['recipe'])+"','"+str(data['tags'])+"')")
+                  '"+str(data['recipe'])+"','"+str("Adsfdsfsd")+"')")
         print(data)
         return jsonify(data)
 
