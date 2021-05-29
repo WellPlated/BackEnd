@@ -8,6 +8,7 @@ from flask_bcrypt import generate_password_hash, check_password_hash
 from cs50 import SQL
 import jwt
 from datetime import datetime, timedelta
+from random import randint
 
 SECRET_KEY="8947357943789907843098489284HFVH94-7FG-GVVG-"
 app = flask.Flask(__name__)
@@ -154,18 +155,20 @@ def api_upload():
             print(message)
             return {"status": 403, "message" : message}
 
+        uniqueHash = randint(100000, 999999)
+        hashCheck = db.execute("SELECT * from recipes where hash=:currHash", currHash=uniqueHash)
+        while(hashCheck != []):
+            uniqueHash = randint(100000, 999999)
+            hashCheck = db.execute("SELECT * from recipes where hash=:currHash", currHash=uniqueHash)
+
         
-        db.execute("INSERT INTO recipes(user_id, title ,date, description, ingredients, recipe, cuisine) \
+        db.execute("INSERT INTO recipes(user_id, title ,date, description, ingredients, recipe, cuisine, hash) \
             VALUES("+str(userID)+", '"+str(data['title'])+"','"+str(data['date'])+"','"+str(data['description'])+"','"+str(data['ingredients'])+"',\
-                  '"+str(data['recipe'])+"', '"+str(data['cuisine'])+"')")
+                  '"+str(data['recipe'])+"', '"+str(data['cuisine'])+"', "+str(uniqueHash)+")")
         
         
         recipeID = db.execute("SELECT id from recipes WHERE user_id=:user_id and description=:descript and date=:date and title=:title", user_id=userID, descript=data['description'], date=data['date'], title= data['title'])
-        # print("testing stuff here:")
-        # print(recipeID)
-        # print(len(recipeID))
-        # print(recipeID[0]['id'])
-        # print(data['tags'])
+       
         for tag in data['tags']:
             db.execute("INSERT INTO tags(recipe_id,tag) VALUES("+str(recipeID[0]['id'])+","+"'"+str(tag)+"'"+")")
 
