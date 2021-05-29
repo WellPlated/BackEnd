@@ -3,7 +3,6 @@ from flask import request, jsonify
 import sqlite3
 import hashlib
 from flask_cors import CORS
-from helpers import login_required
 from flask_bcrypt import generate_password_hash, check_password_hash
 from cs50 import SQL
 import jwt
@@ -220,6 +219,27 @@ def api_getfilter():
     # return_list.append({"status",200})
     print(return_list)
     return jsonify(return_list)
+
+@app.route('/delete', methods=['POST'])
+def delete_recipe():
+    if request.method == 'POST':
+        data = request.json
+        print(data)
+        recipe_id = data['id']
+
+        db.execute("DELETE FROM recipes WHERE id=" + str(recipe_id))
+        return {'status' : 'test'}
+
+@app.route('/comment', methods=['POST']) # info coming in: user_id, recipe_id, comment
+def comment_on_recipe():
+    if request.method == 'POST':
+        data = request.json
+        recipe_id=data["recipe_id"]
+        user_id=data["user_id"]
+        comment=data["comment"]
+        print(data)
+        db.execute("INSERT INTO comments(user_id, recipe_id, comment) VALUES(:recipe_id, :user_id, :comment)", recipe_id=recipe_id, user_id=user_id, comment=comment)
+        return {'status' : 'success'}
 
 def tokenize(user_data: dict) -> str:
     return jwt.encode(
