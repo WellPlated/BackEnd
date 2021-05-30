@@ -241,6 +241,38 @@ def comment_on_recipe():
         db.execute("INSERT INTO comments(user_id, recipe_id, comment) VALUES(:recipe_id, :user_id, :comment)", recipe_id=recipe_id, user_id=user_id, comment=comment)
         return {'status' : 'success'}
 
+@app.route('/like', methods=['POST']) 
+def like_recipe():
+    if request.method == 'POST':
+        data = request.json
+        recipe_id=data["recipe_id"]
+        user_id=data["user_id"]
+        print(data)
+        db.execute("INSERT INTO liked(user_id, post_id) VALUES(:user_id, :post_id)", user_id=user_id, post_id=recipe_id)
+        return {'status' : 'success'}
+
+@app.route('/getLikes', methods=['POST']) 
+def recipe_getLikes():
+    if request.method == 'POST':
+        data = request.json
+        user_id=data["user_id"]
+        print(data)
+        tempData = db.execute("SELECT post_id FROM liked WHERE user_id="+str(user_id))
+        recipes_ids=[]
+        for i in tempData:
+            recipes_ids.append(i['post_id'])
+        final_return=[]
+        for j in recipes_ids:
+            recipes = db.execute("SELECT * FROM recipes WHERE id="+str(j))
+            for recipe in recipes:
+                # find_username = db.execute("SELECT username FROM users WHERE id=:id", id=recipe["user_id"])
+                recipe["user"] = db.execute("SELECT username FROM users WHERE id=:id", id=recipe["user_id"])[0]["username"]
+                del(recipe["user_id"])
+                del(recipe["id"])
+                final_return.append(recipe)
+        print(final_return)
+        return jsonify(final_return)
+
 def tokenize(user_data: dict) -> str:
     return jwt.encode(
         {
