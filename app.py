@@ -45,6 +45,13 @@ def api_all_orders():
     
     return jsonify(recipes)
 
+@app.route('/recipes/fetch_recipe', methods=['GET'])
+def api_one_recipe():
+    if request.method == 'GET':
+        data = request.args
+        recipe = db.execute("SELECT * FROM recipes WHERE hash=:hash", hash=data.get('hash'))
+    return jsonify(data)
+
 
 
 @app.route('/signup', methods=['POST'])
